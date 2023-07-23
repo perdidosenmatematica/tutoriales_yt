@@ -1,0 +1,51 @@
+dimension_tiempo =
+var first_date = DATE(2021,1,1) 
+var last_date =  DATE(2021,6,30) 
+var start_of_fiscal_year = 7 // mes (número) en el que empieza el año fiscal 
+var today = TODAY()
+return
+ADDCOLUMNS(
+CALENDAR (first_date, last_date),
+// PK para unir con las otras tablas:
+    "id_date", INT(FORMAT([Date],"YYYYMMDD")), // Este se deberá modificar según los FK de las otras tablas
+// Partes de la fecha básico:   
+    "Year",YEAR([Date]),
+    "Month",MONTH([Date]),
+    "Day",DAY([Date]),
+// Detalles relacionadas con mes:
+    "Start of Month",DATE( YEAR([Date]), MONTH([Date]), 1), // día que comienza el mes
+    "End of Month",EOMONTH([Date],0), // día que termina el mes
+    "Days in Month",DATEDIFF(DATE( YEAR([Date]), MONTH([Date]), 1),EOMONTH([Date],0),DAY)+1, // días que tiene el mes
+    "Month Name",FORMAT([Date],"MMMM"),
+    "Month Name Short",FORMAT([Date],"MMM"),
+    "Days to end of month", DATEDIFF([Date], EOMONTH([Date],0)), // días faltantes para finalizar el mes
+    "Year Month Number",INT(FORMAT([Date],"YYYYMM")),
+    "Year Month Name",FORMAT([Date],"YYYY-MMM"),
+// Detalles relacionadas con día:
+    "Day Name",FORMAT([Date],"DDDD"),
+    "Day Name Short",FORMAT([Date],"DDD"),
+    "Day of Week",WEEKDAY([Date]),
+    "Day of Year",DATEDIFF(DATE( YEAR([Date]), 1, 1),[Date],DAY)+1, // número de día del año corriente
+    "Days to end of year", DATEDIFF([Date], DATE( YEAR([Date]), 12, 31), DAY), 
+// Otros periodos de tiempo:
+    // Trimestre:
+        "Quarter",QUARTER([Date]),
+        "Quarter Name","Q"&FORMAT([Date],"Q"),
+        "Year Quarter Number",INT(FORMAT([Date],"YYYYQ")),
+        "Year Quarter Name",FORMAT([Date],"YYYY")&" Q"&FORMAT([Date],"Q"),
+        "Start of Quarter",STARTOFQUARTER([Date])  ,
+        "End of Quarter",ENDOFQUARTER([Date]),
+    // Semana:
+        "Week of Year",WEEKNUM([Date]),
+        "Start of Week", [Date]-WEEKDAY([Date])+1,
+        "End of Week",[Date]+7-WEEKDAY([Date]),
+    // Semestre:
+        "Semester", "S" & if (Month([Date]) >=7,2,1),
+// Año Fiscal:
+    "Day of fiscal year",if(MONTH([Date])>= start_of_fiscal_year, 
+                            DATEDIFF(DATE( YEAR([Date]), MONTH([Date]), 1),[Date],DAY)+1, 
+                            DATEDIFF(DATE( YEAR([Date])-1, MONTH([Date]), 1),[Date],DAY)+1),
+    "Fiscal Year",if(_startOfFiscalYear=1,YEAR([Date]),YEAR([Date])+ QUOTIENT(MONTH([Date])+ (13-_startOfFiscalYear),13)), 
+    "Fiscal Quarter",QUARTER( DATE( YEAR([Date]),MOD( MONTH([Date])+ (13-_startOfFiscalYear) -1 ,12) +1,1) ),
+    "Fiscal Month",MOD( MONTH([Date])+ (13-_startOfFiscalYear) -1 ,12) +1
+)
